@@ -217,7 +217,9 @@ const ExpenseList = () => {
                   <div className="mt-3 pl-8">
                     <div className="text-xs text-gray-500 mb-2">Approval Progress:</div>
                     <div className="space-y-1">
-                      {expense.approvals.map((approval, index) => (
+                      {expense.approvals
+                        .filter(approval => approval.approver?.isActive !== false)
+                        .map((approval, index) => (
                         <div key={index} className="flex items-center space-x-2">
                           <div className={`w-2 h-2 rounded-full ${
                             approval.status === 'approved' ? 'bg-green-500' :

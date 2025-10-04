@@ -5,6 +5,7 @@ const User = require('../models/User');
 const Company = require('../models/Company');
 const { auth } = require('../middleware/auth');
 const axios = require('axios');
+const { generateRandomPassword, sendForgotPasswordEmail } = require('../utils/emailService');
 
 const router = express.Router();
 
@@ -129,6 +130,40 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error during login' });
+  }
+});
+
+// Forgot password
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email, isActive: true });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Generate new random password
+    const newPassword = generateRandomPassword();
+    
+    // Update user password
+    user.password = newPassword;
+    await user.save();
+
+    // Send password reset email
+    const emailResult = await sendForgotPasswordEmail(user.email, user.name, newPassword);
+    
+    if (emailResult.success) {
+      res.json({ message: 'Password reset email sent successfully' });
+    } else {
+      res.status(500).json({ 
+        message: 'Password updated but failed to send email',
+        error: emailResult.error 
+      });
+    }
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

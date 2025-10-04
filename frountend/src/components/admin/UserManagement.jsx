@@ -9,7 +9,8 @@ import {
   User, 
   Mail, 
   Shield,
-  Users
+  Users,
+  Send
 } from 'lucide-react';
 
 const UserManagement = () => {
@@ -23,9 +24,9 @@ const UserManagement = () => {
     defaultValues: {
       name: '',
       email: '',
-      password: '',
       role: 'employee',
-      managerId: ''
+      managerId: '',
+      isActive: true
     }
   });
 
@@ -60,8 +61,12 @@ const UserManagement = () => {
         await axios.put(`/api/users/${editingUser._id}`, data);
         toast.success('User updated successfully');
       } else {
-        await axios.post('/api/users', data);
-        toast.success('User created successfully');
+        const response = await axios.post('/api/users', data);
+        if (response.data.passwordSent) {
+          toast.success('User created successfully and password sent via email');
+        } else {
+          toast.success('User created successfully, but password email failed to send');
+        }
       }
       
       reset();
@@ -79,6 +84,7 @@ const UserManagement = () => {
     setValue('email', user.email);
     setValue('role', user.role);
     setValue('managerId', user.manager?._id || '');
+    setValue('isActive', user.isActive !== false);
     setShowForm(true);
   };
 
@@ -98,6 +104,19 @@ const UserManagement = () => {
     reset();
     setShowForm(false);
     setEditingUser(null);
+  };
+
+  const handleSendPassword = async (userId) => {
+    try {
+      const response = await axios.post(`/api/users/${userId}/send-password`);
+      if (response.data.passwordSent) {
+        toast.success('Password sent successfully via email');
+      } else {
+        toast.error('Failed to send password email');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to send password');
+    }
   };
 
   const getRoleColor = (role) => {
@@ -178,22 +197,6 @@ const UserManagement = () => {
                   )}
                 </div>
 
-                {!editingUser && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Password</label>
-                    <input
-                      {...register('password', { 
-                        required: 'Password is required',
-                        minLength: { value: 6, message: 'Password must be at least 6 characters' }
-                      })}
-                      type="password"
-                      className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                    {errors.password && (
-                      <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-                    )}
-                  </div>
-                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Role</label>
@@ -214,12 +217,23 @@ const UserManagement = () => {
                     className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   >
                     <option value="">Select a manager (optional)</option>
-                    {managers.map((manager) => (
+                    {managers.filter(manager => manager.isActive !== false).map((manager) => (
                       <option key={manager._id} value={manager._id}>
                         {manager.name} ({manager.role})
                       </option>
                     ))}
                   </select>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    {...register('isActive')}
+                    type="checkbox"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label className="ml-2 block text-sm text-gray-900">
+                    Active user (can login and approve expenses)
+                  </label>
                 </div>
 
                 <div className="flex justify-end space-x-3 pt-4">
@@ -249,9 +263,9 @@ const UserManagement = () => {
           <h3 className="text-lg font-medium text-gray-900">All Users</h3>
         </div>
         
-        {users.length > 0 ? (
+        {users.filter(user => user.isActive !== false).length > 0 ? (
           <ul className="divide-y divide-gray-200">
-            {users.map((user) => (
+            {users.filter(user => user.isActive !== false).map((user) => (
               <li key={user._id} className="px-6 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
@@ -273,6 +287,12 @@ const UserManagement = () => {
                           <Shield className="h-3 w-3 mr-1" />
                           {user.role}
                         </span>
+
+                        {user.isActive === false && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            Inactive
+                          </span>
+                        )}
                       </div>
                       {user.manager && (
                         <p className="text-xs text-gray-500 mt-1">
@@ -283,6 +303,13 @@ const UserManagement = () => {
                   </div>
                   
                   <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleSendPassword(user._id)}
+                      className="text-gray-400 hover:text-blue-600"
+                      title="Send password via email"
+                    >
+                      <Send className="h-4 w-4" />
+                    </button>
                     <button
                       onClick={() => handleEdit(user)}
                       className="text-gray-400 hover:text-gray-600"
@@ -305,7 +332,7 @@ const UserManagement = () => {
         ) : (
           <div className="text-center py-12">
             <Users className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No users found</h3>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No Active users found</h3>
             <p className="mt-1 text-sm text-gray-500">Get started by adding a new user.</p>
           </div>
         )}

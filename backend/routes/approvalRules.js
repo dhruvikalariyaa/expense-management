@@ -10,7 +10,7 @@ router.get('/', auth, requireRole(['admin']), async (req, res) => {
     const rules = await ApprovalRule.find({
       company: req.user.company._id,
       isActive: true
-    }).populate('approvers specificApprovers', 'name email role');
+    }).populate('approvers specificApprovers', 'name email role isActive');
 
     res.json(rules);
   } catch (error) {
@@ -51,7 +51,7 @@ router.post('/', auth, requireRole(['admin']), async (req, res) => {
     await rule.save();
     
     const populatedRule = await ApprovalRule.findById(rule._id)
-      .populate('approvers specificApprovers', 'name email role');
+      .populate('approvers specificApprovers', 'name email role isActive');
 
     res.status(201).json(populatedRule);
   } catch (error) {
@@ -84,7 +84,7 @@ router.put('/:id', auth, requireRole(['admin']), async (req, res) => {
         specificApprovers: specificApprovers || []
       },
       { new: true }
-    ).populate('approvers specificApprovers', 'name email role');
+    ).populate('approvers specificApprovers', 'name email role isActive');
 
     if (!rule) {
       return res.status(404).json({ message: 'Approval rule not found' });

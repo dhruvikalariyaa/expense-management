@@ -197,7 +197,7 @@ const ApprovalRules = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Approvers</label>
                   <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-3">
-                    {users.map((user) => (
+                    {users.filter(user => user.isActive !== false).map((user) => (
                       <label key={user._id} className="flex items-center">
                         <input
                           type="checkbox"
@@ -255,7 +255,7 @@ const ApprovalRules = () => {
                     Select users who can auto-approve expenses. If any of these users approve, the expense is automatically approved regardless of percentage.
                   </p>
                   <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-3">
-                    {users.map((user) => (
+                    {users.filter(user => user.isActive !== false).map((user) => (
                       <label key={user._id} className="flex items-center">
                         <input
                           type="checkbox"
@@ -326,7 +326,7 @@ const ApprovalRules = () => {
                         <div className="flex items-center space-x-4 mt-2">
                           <div className="flex items-center text-sm text-gray-500">
                             <Users className="h-4 w-4 mr-1" />
-                            {rule.approvers.length} approvers
+                            {rule.approvers.filter(approver => approver.isActive !== false).length} approvers
                           </div>
                           <div className="flex items-center text-sm text-gray-500">
                             <Percent className="h-4 w-4 mr-1" />
@@ -352,9 +352,9 @@ const ApprovalRules = () => {
                               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                 Sequential Approval
                               </span>
-                            ) : rule.specificApprovers && rule.specificApprovers.length > 0 ? (
+                            ) : rule.specificApprovers && rule.specificApprovers.filter(approver => approver.isActive !== false).length > 0 ? (
                               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Hybrid: {rule.minimumApprovalPercentage}% OR {rule.specificApprovers.length} specific approver(s)
+                                Hybrid: {rule.minimumApprovalPercentage}% OR {rule.specificApprovers.filter(approver => approver.isActive !== false).length} specific approver(s)
                               </span>
                             ) : (
                               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
@@ -363,9 +363,9 @@ const ApprovalRules = () => {
                             )}
                           </div>
                           
-                          {rule.specificApprovers && rule.specificApprovers.length > 0 && (
+                          {rule.specificApprovers && rule.specificApprovers.filter(approver => approver.isActive !== false).length > 0 && (
                             <div className="mt-1 text-xs text-gray-500">
-                              Auto-approvers: {rule.specificApprovers.map(approver => approver.name).join(', ')}
+                              Auto-approvers: {rule.specificApprovers.filter(approver => approver.isActive !== false).map(approver => approver.name).join(', ')}
                             </div>
                           )}
                         </div>
