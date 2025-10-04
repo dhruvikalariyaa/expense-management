@@ -247,7 +247,7 @@ const AddExpense = ({ isOpen, onClose, onSuccess, editExpense = null }) => {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto w-full">
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-gray-500 bg-opacity-30 backdrop-blur-sm transition-opacity" onClick={handleClose}></div>
+      <div className="fixed inset-0 bg-gray-20 bg-opacity-10 backdrop-blur-sm transition-opacity shadow-lg" onClick={handleClose}></div>
       
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4 w-full">

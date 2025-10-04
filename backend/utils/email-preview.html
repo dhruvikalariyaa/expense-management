@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Template Preview - Expense Management System</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .preview-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .preview-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .email-preview {
+            border: 1px solid #e2e8f0;
+            margin: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .email-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            text-align: center;
+        }
+        .email-content {
+            padding: 40px 30px;
+        }
+        .email-footer {
+            background-color: #f8fafc;
+            padding: 20px 30px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .info-card {
+            border-left: 4px solid #3b82f6;
+            background-color: #eff6ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .success-card {
+            border-left: 4px solid #10b981;
+            background-color: #ecfdf5;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .warning-card {
+            border-left: 4px solid #f59e0b;
+            background-color: #fffbeb;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .danger-card {
+            border-left: 4px solid #ef4444;
+            background-color: #fef2f2;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 8px;
+            display: inline-block;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+        }
+        .button-center {
+            text-align: center;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #374151;
+        }
+        .info-value {
+            color: #6b7280;
+        }
+        .code {
+            background-color: #e5e7eb;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-container">
+        <div class="preview-header">
+            <h1>📧 Professional Email Templates Preview</h1>
+            <p>Expense Management System - Modern & Professional Design</p>
+        </div>
+
+        <!-- Welcome Email Preview -->
+        <div class="email-preview">
+            <div class="email-header">
+                <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">
+                    Expense Management System
+                </h1>
+                <p style="color: #e2e8f0; margin: 8px 0 0 0; font-size: 16px;">
+                    Professional Expense Tracking & Approval
+                </p>
+            </div>
+            
+            <div class="email-content">
+                <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px; font-weight: 600;">
+                    Welcome to Expense Management System! 🎉
+                </h2>
+                
+                <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                    Hello <strong>John Doe</strong>,
+                </p>
+                
+                <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+                    Your account has been successfully created! You can now access the Expense Management System using the credentials below:
+                </p>
+                
+                <div class="info-card">
+                    <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px;">Login Credentials</h3>
+                    <div class="info-item">
+                        <span class="info-label">Email Address:</span>
+                        <span class="info-value">john.doe@company.com</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Temporary Password:</span>
+                        <span class="info-value"><code class="code">TempPass123!</code></span>
+                    </div>
+                </div>
+                
+                <div class="warning-card">
+                    <p style="margin: 0; color: #92400e; font-weight: 600;">
+                        🔒 Security Notice
+                    </p>
+                    <p style="margin: 8px 0 0 0; color: #92400e; font-size: 14px;">
+                        For your security, please change your password immediately after your first login.
+                    </p>
+                </div>
+                
+                <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 25px 0 0 0;">
+                    Best regards,<br>
+                    <strong>Expense Management Team</strong>
+                </p>
+            </div>
+            
+            <div class="email-footer">
+                <div style="text-align: center;">
+                    <p style="color: #64748b; font-size: 14px; margin: 0 0 10px 0;">
+                        This is an automated message from the Expense Management System
+                    </p>
+                    <p style="color: #94a3b8; font-size: 12px; margin: 0;">
+                        © 2024 Expense Management System. All rights reserved.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expense Approval Email Preview -->
+        <div class="email-preview" style="margin-top: 30px;">
+            <div class="email-header">
+                <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">
+                    Expense Management System
+                </h1>
+                <p style="color: #e2e8f0; margin: 8px 0 0 0; font-size: 16px;">
+                    Professional Expense Tracking & Approval
+                </p>
+            </div>
+            
+            <div class="email-content">
+                <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px; font-weight: 600;">
+                    Expense Approved! ✅
+                </h2>
+                
+                <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                    Hello <strong>Jane Smith</strong>,
+                </p>
+                
+                <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+                    Great news! Your expense has been approved by <strong>Manager Name</strong>. Here are the details:
+                </p>
+                
+                <div class="success-card">
+                    <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px;">Approved Expense Details</h3>
+                    <div class="info-item">
+                        <span class="info-label">Description:</span>
+                        <span class="info-value">Business Lunch with Client</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Category:</span>
+                        <span class="info-value">Food</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Amount:</span>
+                        <span class="info-value">USD $45.50</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Approved By:</span>
+                        <span class="info-value">Manager Name</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Status:</span>
+                        <span class="info-value">Approved</span>
+                    </div>
+                </div>
+                
+                <div class="success-card">
+                    <p style="margin: 0; color: #065f46; font-weight: 600;">
+                        💰 Reimbursement Information
+                    </p>
+                    <p style="margin: 8px 0 0 0; color: #065f46; font-size: 14px;">
+                        Your expense has been approved and will be processed for reimbursement.
+                    </p>
+                </div>
+                
+                <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 25px 0 0 0;">
+                    Best regards,<br>
+                    <strong>Expense Management Team</strong>
+                </p>
+            </div>
+            
+            <div class="email-footer">
+                <div style="text-align: center;">
+                    <p style="color: #64748b; font-size: 14px; margin: 0 0 10px 0;">
+                        This is an automated message from the Expense Management System
+                    </p>
+                    <p style="color: #94a3b8; font-size: 12px; margin: 0;">
+                        © 2024 Expense Management System. All rights reserved.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approval Request Email Preview -->
+        <div class="email-preview" style="margin-top: 30px;">
+            <div class="email-header">
+                <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">
+                    Expense Management System
+                </h1>
+                <p style="color: #e2e8f0; margin: 8px 0 0 0; font-size: 16px;">
+                    Professional Expense Tracking & Approval
+                </p>
+            </div>
+            
+            <div class="email-content">
+                <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px; font-weight: 600;">
+                    New Expense Approval Request 📋
+                </h2>
+                
+                <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                    Hello <strong>Manager Name</strong>,
+                </p>
+                
+                <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+                    You have a new expense approval request from <strong>Employee Name</strong> that requires your review:
+                </p>
+                
+                <div class="info-card">
+                    <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 18px;">Expense Details</h3>
+                    <div class="info-item">
+                        <span class="info-label">Employee:</span>
+                        <span class="info-value">Employee Name</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Description:</span>
+                        <span class="info-value">Office Supplies Purchase</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Amount:</span>
+                        <span class="info-value">USD $125.00</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Category:</span>
+                        <span class="info-value">Office Supplies</span>
+                    </div>
+                </div>
+                
+                <div class="button-center">
+                    <a href="#" class="button">Review & Approve</a>
+                </div>
+                
+                <div class="warning-card">
+                    <p style="margin: 0; color: #92400e; font-weight: 600;">
+                        ⏰ Action Required
+                    </p>
+                    <p style="margin: 8px 0 0 0; color: #92400e; font-size: 14px;">
+                        Please review this expense as soon as possible.
+                    </p>
+                </div>
+                
+                <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 25px 0 0 0;">
+                    Best regards,<br>
+                    <strong>Expense Management Team</strong>
+                </p>
+            </div>
+            
+            <div class="email-footer">
+                <div style="text-align: center;">
+                    <p style="color: #64748b; font-size: 14px; margin: 0 0 10px 0;">
+                        This is an automated message from the Expense Management System
+                    </p>
+                    <p style="color: #94a3b8; font-size: 12px; margin: 0;">
+                        © 2024 Expense Management System. All rights reserved.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

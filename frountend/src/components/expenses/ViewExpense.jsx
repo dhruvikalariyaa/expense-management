@@ -101,7 +101,7 @@ const ViewExpense = ({ expenseId, isOpen, onClose, onEdit, onDelete }) => {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-gray-500 bg-opacity-30 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
+      <div className="fixed inset-0 bg-gray-20 bg-opacity-10 backdrop-blur-sm transition-opacity shadow-lg" onClick={onClose}></div>
       
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
@@ -328,32 +328,24 @@ const ViewExpense = ({ expenseId, isOpen, onClose, onEdit, onDelete }) => {
           </div>
           
           <div className="space-y-3">
-            {expense.approvals.map((approval, index) => (
+            {expense.approvals
+              .filter(approval => approval.approver?.isActive !== false)
+              .map((approval, index) => (
               <div key={index} className="flex items-center space-x-3">
                 <div className={`w-3 h-3 rounded-full ${
                   approval.status === 'approved' ? 'bg-green-500' :
-                  approval.status === 'rejected' ? 'bg-red-500' : 
-                  approval.approver?.isActive === false ? 'bg-gray-400' : 'bg-gray-300'
+                  approval.status === 'rejected' ? 'bg-red-500' : 'bg-gray-300'
                 }`} />
                 <div className="flex-1">
-                  <div className="flex items-center space-x-2">
-                    <p className="text-sm font-medium text-gray-900">
-                      {approval.approver?.name || 'Unknown Approver'}
-                    </p>
-                    {approval.approver?.isActive === false && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        Inactive
-                      </span>
-                    )}
-                  </div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {approval.approver?.name || 'Unknown Approver'}
+                  </p>
                   <p className={`text-xs ${
                     approval.status === 'approved' ? 'text-green-600' :
-                    approval.status === 'rejected' ? 'text-red-600' : 
-                    approval.approver?.isActive === false ? 'text-red-500' : 'text-gray-500'
+                    approval.status === 'rejected' ? 'text-red-600' : 'text-gray-500'
                   }`}>
                     {approval.status === 'approved' ? 'Approved' :
-                     approval.status === 'rejected' ? 'Rejected' : 
-                     approval.approver?.isActive === false ? 'Manager Inactive' : 'Pending'}
+                     approval.status === 'rejected' ? 'Rejected' : 'Pending'}
                   </p>
                 </div>
               </div>
