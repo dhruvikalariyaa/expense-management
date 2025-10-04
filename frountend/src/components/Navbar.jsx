@@ -44,7 +44,6 @@ const Navbar = () => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Home, roles: ['admin', 'manager', 'employee'] },
     { name: 'My Expenses', href: '/expenses', icon: Receipt, roles: ['employee'] },
-    { name: 'New Expense', href: '/expenses/new', icon: Plus, roles: ['employee'] },
     { name: 'All Expenses', href: '/all-expenses', icon: Receipt, roles: ['admin'] },
     { name: 'Approvals', href: '/approvals', icon: CheckCircle, roles: ['manager', 'admin'] },
     { name: 'Users', href: '/users', icon: Users, roles: ['admin'] },
@@ -73,7 +72,12 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 flex items-center">
+            <img 
+              src="/logo.png" 
+              alt="Expense Manager Logo" 
+              className="h-8 w-8 object-contain mr-3"
+            />
             <h1 className="text-xl font-bold text-gray-900">Expense Manager</h1>
           </div>
           

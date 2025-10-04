@@ -19,8 +19,13 @@ function ProtectedRoute({ children, allowedRoles = [] }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+        <img 
+          src="/logo.png" 
+          alt="Expense Manager Logo" 
+          className="h-16 w-16 object-contain mb-4"
+        />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -58,11 +63,6 @@ function AppRoutes() {
         <Route path="expenses" element={
           <ProtectedRoute allowedRoles={['employee']}>
             <ExpenseList />
-          </ProtectedRoute>
-        } />
-        <Route path="expenses/new" element={
-          <ProtectedRoute allowedRoles={['employee']}>
-            <ExpenseForm />
           </ProtectedRoute>
         } />
         
