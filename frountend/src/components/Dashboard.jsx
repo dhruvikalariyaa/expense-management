@@ -10,7 +10,10 @@ import {
   Users, 
   Settings,
   TrendingUp,
-  AlertCircle
+  Plus,
+  ArrowRight,
+  Calendar,
+  Tag
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -81,6 +84,26 @@ const Dashboard = () => {
     }).format(amount);
   };
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  const getRoleBasedMessage = () => {
+    switch (user?.role) {
+      case 'admin':
+        return 'Manage your organization\'s expenses and approvals.';
+      case 'manager':
+        return 'Review and approve expense claims from your team.';
+      case 'employee':
+        return 'Track and submit your expense claims.';
+      default:
+        return 'Here\'s your expense overview.';
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -90,183 +113,267 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Section */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Welcome back, {user.name}!
-        </h1>
-        <p className="text-gray-600 mt-1">
-          Here's what's happening with your expenses today.
-        </p>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <Receipt className="h-8 w-8 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Expenses</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.totalExpenses}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <Clock className="h-8 w-8 text-yellow-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Pending Approvals</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.pendingApprovals}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <CheckCircle className="h-8 w-8 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Approved</p>
-              <p className="text-2xl font-semibold text-gray-900">{stats.approvedExpenses}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <DollarSign className="h-8 w-8 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Amount</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(stats.totalAmount, user.company?.baseCurrency)}
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="px-6 py-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900"> {getGreeting()}, {user?.name || 'User'}</h1>
+              <p className="mt-2 text-gray-600">
+                {getRoleBasedMessage()}
               </p>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Expenses */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Recent Expenses</h3>
-          </div>
-          <div className="p-6">
-            {recentExpenses.length > 0 ? (
-              <div className="space-y-4">
-                {recentExpenses.map((expense) => (
-                  <div key={expense._id} className="flex items-center justify-between">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {expense.description}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {expense.category} • {new Date(expense.expenseDate).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium text-gray-900">
-                        {formatCurrency(expense.convertedAmount, user.company?.baseCurrency)}
-                      </span>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(expense.status)}`}>
-                        {expense.status.replace('_', ' ')}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-                <div className="pt-4">
-                  <Link
-                    to="/expenses"
-                    className="text-sm text-blue-600 hover:text-blue-500 font-medium"
-                  >
-                    View all expenses →
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-6">
-                <Receipt className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No expenses</h3>
-                <p className="mt-1 text-sm text-gray-500">Get started by creating a new expense.</p>
-                <div className="mt-6">
-                  <Link
-                    to="/expenses/new"
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                  >
-                    New Expense
-                  </Link>
-                </div>
-              </div>
+            {user.role === 'employee' && (
+              <Link
+                to="/expenses/new"
+                className="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                New Expense
+              </Link>
             )}
           </div>
         </div>
+      </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Quick Actions</h3>
+      <div className="px-6 py-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Receipt className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Expenses</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalExpenses}</p>
+              </div>
+            </div>
           </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              {user.role === 'employee' && (
-                <>
-                  <Link
-                    to="/expenses/new"
-                    className="flex items-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    <Receipt className="h-5 w-5 text-blue-600 mr-3" />
-                    <span className="text-sm font-medium text-gray-900">Submit New Expense</span>
-                  </Link>
-                  <Link
-                    to="/expenses"
-                    className="flex items-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    <TrendingUp className="h-5 w-5 text-green-600 mr-3" />
-                    <span className="text-sm font-medium text-gray-900">View My Expenses</span>
-                  </Link>
-                </>
-              )}
 
-              {(user.role === 'manager' || user.role === 'admin') && (
-                <>
-                  <Link
-                    to="/approvals"
-                    className="flex items-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    <CheckCircle className="h-5 w-5 text-yellow-600 mr-3" />
-                    <span className="text-sm font-medium text-gray-900">Review Approvals</span>
-                  </Link>
-                </>
-              )}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                  <Clock className="h-6 w-6 text-yellow-600" />
+                </div>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Pending</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.pendingApprovals}</p>
+              </div>
+            </div>
+          </div>
 
-              {user.role === 'admin' && (
-                <>
-                  <Link
-                    to="/users"
-                    className="flex items-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    <Users className="h-5 w-5 text-purple-600 mr-3" />
-                    <span className="text-sm font-medium text-gray-900">Manage Users</span>
-                  </Link>
-                  <Link
-                    to="/approval-rules"
-                    className="flex items-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    <Settings className="h-5 w-5 text-gray-600 mr-3" />
-                    <span className="text-sm font-medium text-gray-900">Configure Rules</span>
-                  </Link>
-                </>
-              )}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                </div>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Approved</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.approvedExpenses}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                  <DollarSign className="h-6 w-6 text-emerald-600" />
+                </div>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Amount</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {formatCurrency(stats.totalAmount, user.company?.baseCurrency)}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Recent Expenses */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Recent Expenses</h3>
+                  {user.role === 'admin' && (
+                    <Link
+                      to="/all-expenses"
+                      className="text-sm text-blue-600 hover:text-blue-500 font-medium flex items-center"
+                    >
+                      View all
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </Link>
+                  )}
+                </div>
+              </div>
+              <div className="p-6">
+                {recentExpenses.length > 0 ? (
+                  <div className="space-y-4">
+                    {recentExpenses.map((expense) => (
+                      <div key={expense._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex-shrink-0">
+                              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                                <Receipt className="h-5 w-5 text-gray-600" />
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {expense.description}
+                              </p>
+                              <div className="flex items-center space-x-2 mt-1">
+                                <span className="inline-flex items-center text-xs text-gray-500">
+                                  <Tag className="h-3 w-3 mr-1" />
+                                  {expense.category}
+                                </span>
+                                <span className="inline-flex items-center text-xs text-gray-500">
+                                  <Calendar className="h-3 w-3 mr-1" />
+                                  {new Date(expense.expenseDate).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <span className="text-sm font-semibold text-gray-900">
+                            {formatCurrency(expense.convertedAmount, user.company?.baseCurrency)}
+                          </span>
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(expense.status)}`}>
+                            {expense.status.replace('_', ' ')}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Receipt className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No expenses yet</h3>
+                    <p className="text-gray-500 mb-6">Get started by creating your first expense.</p>
+                    {user.role === 'employee' && (
+                      <Link
+                        to="/expenses/new"
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Expense
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+              </div>
+              <div className="p-6">
+                <div className="space-y-3">
+                  {user.role === 'employee' && (
+                    <>
+                      <Link
+                        to="/expenses/new"
+                        className="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors group"
+                      >
+                        <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-4">
+                          <Plus className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">New Expense</p>
+                          <p className="text-xs text-gray-500">Submit a new expense claim</p>
+                        </div>
+                      </Link>
+                      <Link
+                        to="/expenses"
+                        className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
+                      >
+                        <div className="w-10 h-10 bg-gray-600 rounded-lg flex items-center justify-center mr-4">
+                          <TrendingUp className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">My Expenses</p>
+                          <p className="text-xs text-gray-500">View all your expenses</p>
+                        </div>
+                      </Link>
+                    </>
+                  )}
+
+                  {(user.role === 'manager' || user.role === 'admin') && (
+                    <Link
+                      to="/approvals"
+                      className="flex items-center p-4 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors group"
+                    >
+                      <div className="w-10 h-10 bg-yellow-600 rounded-lg flex items-center justify-center mr-4">
+                        <CheckCircle className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Approvals</p>
+                        <p className="text-xs text-gray-500">Review pending approvals</p>
+                      </div>
+                    </Link>
+                  )}
+
+                  {user.role === 'admin' && (
+                    <>
+                      <Link
+                        to="/all-expenses"
+                        className="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors group"
+                      >
+                        <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center mr-4">
+                          <Receipt className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">All Expenses</p>
+                          <p className="text-xs text-gray-500">View all company expenses</p>
+                        </div>
+                      </Link>
+                      <Link
+                        to="/users"
+                        className="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors group"
+                      >
+                        <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center mr-4">
+                          <Users className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">Users</p>
+                          <p className="text-xs text-gray-500">Manage user accounts</p>
+                        </div>
+                      </Link>
+                      <Link
+                        to="/approval-rules"
+                        className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
+                      >
+                        <div className="w-10 h-10 bg-gray-600 rounded-lg flex items-center justify-center mr-4">
+                          <Settings className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">Rules</p>
+                          <p className="text-xs text-gray-500">Configure approval rules</p>
+                        </div>
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

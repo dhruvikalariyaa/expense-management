@@ -8,6 +8,7 @@ import ResetPassword from './components/auth/ResetPassword';
 import Dashboard from './components/Dashboard';
 import ExpenseForm from './components/expenses/ExpenseForm';
 import ExpenseList from './components/expenses/ExpenseList';
+import AllExpenses from './components/expenses/AllExpenses';
 import PendingApprovals from './components/approvals/PendingApprovals';
 import UserManagement from './components/admin/UserManagement';
 import ApprovalRules from './components/admin/ApprovalRules';
@@ -62,6 +63,13 @@ function AppRoutes() {
         <Route path="expenses/new" element={
           <ProtectedRoute allowedRoles={['employee']}>
             <ExpenseForm />
+          </ProtectedRoute>
+        } />
+        
+        {/* Admin only - view all expenses */}
+        <Route path="all-expenses" element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <AllExpenses />
           </ProtectedRoute>
         } />
         

@@ -7,6 +7,7 @@ const User = require('../models/User');
 const ApprovalRule = require('../models/ApprovalRule');
 const { auth, requireRole } = require('../middleware/auth');
 const axios = require('axios');
+const ocrService = require('../utils/ocrService');
 
 const router = express.Router();
 
@@ -119,41 +120,125 @@ router.get('/pending', auth, requireRole(['admin', 'manager']), async (req, res)
           }
         ];
       } else {
-        // If manager is inactive, return empty results
-        query._id = { $in: [] };
+        return res.json([]);
       }
     }
 
     const expenses = await Expense.find(query)
-      .populate('employee', 'name email manager')
-      .populate('approvals.approver', 'name email isActive')
+      .populate('employee', 'name email')
+      .populate('approvals.approver', 'name email role')
+      .populate('company', 'name')
       .sort({ createdAt: -1 });
-
-    // Debug logging
-    console.log('Manager ID:', req.user._id);
-    console.log('Query:', JSON.stringify(query, null, 2));
-    console.log('Found expenses:', expenses.length);
-    
-    // Log each expense's approval status for this manager
-    expenses.forEach(expense => {
-      const managerApproval = expense.approvals.find(
-        approval => approval.approver.toString() === req.user._id.toString()
-      );
-      console.log(`Expense ${expense._id}: Manager approval status:`, managerApproval?.status);
-      console.log(`Current approver:`, expense.currentApprover);
-    });
 
     res.json(expenses);
   } catch (error) {
-    console.error('Get pending approvals error:', error);
+    console.error('Error fetching pending expenses:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get single expense by ID
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const expense = await Expense.findById(req.params.id)
+      .populate('employee', 'name email')
+      .populate('approvals.approver', 'name email role')
+      .populate('company', 'name');
+
+    if (!expense) {
+      return res.status(404).json({ message: 'Expense not found' });
+    }
+
+    // Check if user has access to this expense
+    const currentUser = await User.findById(req.user._id);
+    if (expense.employee._id.toString() !== req.user._id.toString() && 
+        !['admin', 'manager'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    res.json(expense);
+  } catch (error) {
+    console.error('Error fetching expense:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update expense by ID
+router.put('/:id', auth, upload.single('receipt'), async (req, res) => {
+  try {
+    const expense = await Expense.findById(req.params.id);
+    
+    if (!expense) {
+      return res.status(404).json({ message: 'Expense not found' });
+    }
+
+    // Check if user has access to this expense
+    if (expense.employee.toString() !== req.user._id.toString() && 
+        !['admin', 'manager'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    // Only allow editing draft expenses
+    if (expense.status !== 'draft') {
+      return res.status(400).json({ message: 'Only draft expenses can be edited' });
+    }
+
+    const { description, category, amount, currency, paidBy, expenseDate, notes } = req.body;
+
+    // Get conversion rate if currency changed
+    let convertedAmount = parseFloat(amount);
+    if (currency !== 'USD') {
+      const conversionRate = await getConversionRate(currency, 'USD');
+      convertedAmount = parseFloat(amount) * conversionRate;
+    }
+
+    // Update expense fields
+    expense.description = description;
+    expense.category = category;
+    expense.amount = parseFloat(amount);
+    expense.currency = currency;
+    expense.convertedAmount = convertedAmount;
+    expense.paidBy = paidBy;
+    expense.expenseDate = new Date(expenseDate);
+    if (notes) expense.notes = notes;
+
+    // Handle receipt upload
+    if (req.file) {
+      // Delete old receipt if exists
+      if (expense.receipt && expense.receipt.path) {
+        const fs = require('fs');
+        const path = require('path');
+        const oldReceiptPath = path.join(__dirname, '..', expense.receipt.path);
+        if (fs.existsSync(oldReceiptPath)) {
+          fs.unlinkSync(oldReceiptPath);
+        }
+      }
+      
+      expense.receipt = {
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        path: req.file.path,
+        mimetype: req.file.mimetype
+      };
+    }
+
+    await expense.save();
+
+    // Populate the response
+    await expense.populate('employee', 'name email');
+    await expense.populate('company', 'name');
+
+    res.json(expense);
+  } catch (error) {
+    console.error('Update expense error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
 // Create new expense
-router.post('/', auth, requireRole(['employee']), async (req, res) => {
+router.post('/', auth, requireRole(['employee']), upload.single('receipt'), async (req, res) => {
   try {
-    const { description, category, amount, currency, expenseDate, paidBy } = req.body;
+    const { description, category, amount, currency, expenseDate, paidBy, notes } = req.body;
 
     // Convert amount to number
     const numericAmount = parseFloat(amount);
@@ -187,12 +272,61 @@ router.post('/', auth, requireRole(['employee']), async (req, res) => {
       status: 'draft'
     });
 
+    // Add notes if provided
+    if (notes) {
+      expense.notes = notes;
+    }
+
+    // Handle receipt upload and OCR processing
+    let ocrData = null;
+    if (req.file) {
+      // Process receipt with OCR
+      const ocrResult = await ocrService.processReceipt(req.file.path, req.file.mimetype);
+      
+      expense.receipt = {
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        path: req.file.path,
+        mimetype: req.file.mimetype
+      };
+
+      // Auto-update expense fields if OCR data is available and confidence is high enough
+      if (ocrResult.success && ocrResult.parsedData.confidence > 30) {
+        const data = ocrResult.parsedData;
+        
+        // Only update fields that are empty or have default values
+        if (data.amount && (!expense.amount || expense.amount === 0)) {
+          expense.amount = data.amount;
+          // Recalculate converted amount
+          const newConversionRate = await getConversionRate(data.currency || currency, baseCurrency);
+          expense.convertedAmount = data.amount * newConversionRate;
+        }
+        if (data.currency && expense.currency === 'USD') {
+          expense.currency = data.currency;
+        }
+        if (data.date && !expense.expenseDate) {
+          expense.expenseDate = new Date(data.date);
+        }
+        if (data.description && !expense.description) {
+          expense.description = data.description;
+        }
+        if (data.category && !expense.category) {
+          expense.category = data.category;
+        }
+      }
+      
+      ocrData = ocrResult.success ? ocrResult.parsedData : null;
+    }
+
     await expense.save();
     
     const populatedExpense = await Expense.findById(expense._id)
       .populate('employee', 'name email');
 
-    res.status(201).json(populatedExpense);
+    res.status(201).json({
+      ...populatedExpense.toObject(),
+      ocrData: ocrData
+    });
   } catch (error) {
     console.error('Create expense error:', error);
     res.status(500).json({ message: 'Server error: ' + error.message });
@@ -270,6 +404,37 @@ router.post('/:id/submit', auth, requireRole(['employee']), async (req, res) => 
   }
 });
 
+// Process receipt with OCR
+router.post('/process-receipt', auth, requireRole(['employee']), upload.single('receipt'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    // Process the receipt with OCR
+    const ocrResult = await ocrService.processReceipt(req.file.path, req.file.mimetype);
+    
+    if (!ocrResult.success) {
+      return res.status(400).json({ 
+        message: 'Failed to process receipt', 
+        error: ocrResult.error 
+      });
+    }
+
+    // Clean up the uploaded file
+    fs.unlinkSync(req.file.path);
+
+    res.json({
+      message: 'Receipt processed successfully',
+      extractedData: ocrResult.parsedData,
+      rawText: ocrResult.extractedText
+    });
+  } catch (error) {
+    console.error('OCR processing error:', error);
+    res.status(500).json({ message: 'Server error processing receipt' });
+  }
+});
+
 // Upload receipt
 router.post('/:id/receipt', auth, requireRole(['employee']), upload.single('receipt'), async (req, res) => {
   try {
@@ -286,6 +451,9 @@ router.post('/:id/receipt', auth, requireRole(['employee']), upload.single('rece
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
+    // Process receipt with OCR to auto-fill fields
+    const ocrResult = await ocrService.processReceipt(req.file.path, req.file.mimetype);
+    
     expense.receipt = {
       filename: req.file.filename,
       originalName: req.file.originalname,
@@ -293,9 +461,35 @@ router.post('/:id/receipt', auth, requireRole(['employee']), upload.single('rece
       mimetype: req.file.mimetype
     };
 
+    // Auto-update expense fields if OCR data is available and confidence is high enough
+    if (ocrResult.success && ocrResult.parsedData.confidence > 30) {
+      const data = ocrResult.parsedData;
+      
+      if (data.amount && !expense.amount) {
+        expense.amount = data.amount;
+      }
+      if (data.currency && !expense.currency) {
+        expense.currency = data.currency;
+      }
+      if (data.date && !expense.expenseDate) {
+        expense.expenseDate = new Date(data.date);
+      }
+      if (data.description && !expense.description) {
+        expense.description = data.description;
+      }
+      if (data.category && !expense.category) {
+        expense.category = data.category;
+      }
+    }
+
     await expense.save();
-    res.json({ message: 'Receipt uploaded successfully' });
+    
+    res.json({ 
+      message: 'Receipt uploaded successfully',
+      ocrData: ocrResult.success ? ocrResult.parsedData : null
+    });
   } catch (error) {
+    console.error('Receipt upload error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

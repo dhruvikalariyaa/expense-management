@@ -155,25 +155,32 @@ const PendingApprovals = () => {
                   <div className="mt-3 pl-8">
                     <div className="text-xs text-gray-500 mb-2">Approval Progress:</div>
                     <div className="space-y-1">
-                      {expense.approvals
-                        .filter(approval => approval.approver?.isActive !== false)
-                        .map((approval, index) => (
+                      {expense.approvals.map((approval, index) => (
                         <div key={index} className="flex items-center space-x-2">
                           <div className={`w-2 h-2 rounded-full ${
                             approval.status === 'approved' ? 'bg-green-500' :
-                            approval.status === 'rejected' ? 'bg-red-500' : 'bg-gray-300'
+                            approval.status === 'rejected' ? 'bg-red-500' : 
+                            approval.approver?.isActive === false ? 'bg-gray-400' : 'bg-gray-300'
                           }`} />
-                          <span className="text-xs text-gray-600">
-                            {approval.approver?.name || 'Unknown'} - 
-                            {approval.status === 'approved' ? ' Approved' :
-                             approval.status === 'rejected' ? ' Rejected' : ' Pending'}
-                            {approval.comment && (
-                              <span className="ml-2 text-gray-500">
-                                <MessageSquare className="h-3 w-3 inline mr-1" />
-                                {approval.comment}
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs text-gray-600">
+                              {approval.approver?.name || 'Unknown'} - 
+                              {approval.status === 'approved' ? ' Approved' :
+                               approval.status === 'rejected' ? ' Rejected' : 
+                               approval.approver?.isActive === false ? ' Manager Inactive' : ' Pending'}
+                            </span>
+                            {approval.approver?.isActive === false && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                Inactive
                               </span>
                             )}
-                          </span>
+                          </div>
+                          {approval.comment && (
+                            <span className="ml-2 text-gray-500">
+                              <MessageSquare className="h-3 w-3 inline mr-1" />
+                              {approval.comment}
+                            </span>
+                          )}
                         </div>
                       ))}
                     </div>
