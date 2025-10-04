@@ -99,6 +99,7 @@ npm run dev
 📧 Contact Us
 
 For queries or contributions, reach out to:
+
 📩 Vrushibh: rishibh.bhalodiya@gmail.com
 
 📩 Dhruvi: dhruvikalariya2002@gmail.com
