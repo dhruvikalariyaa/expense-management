@@ -19,6 +19,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/expenses', require('./routes/expenses'));
 app.use('/api/approval-rules', require('./routes/approvalRules'));
+app.use('/api/password-reset', require('./routes/passwordReset'));
 
 // Health check
 app.get('/api/health', (req, res) => {

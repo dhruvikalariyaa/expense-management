@@ -80,7 +80,7 @@ router.get('/', auth, async (req, res) => {
 
     const expenses = await Expense.find(query)
       .populate('employee', 'name email')
-      .populate('approvals.approver', 'name email')
+      .populate('approvals.approver', 'name email isActive')
       .sort({ createdAt: -1 });
 
     res.json(expenses);
@@ -103,23 +103,30 @@ router.get('/pending', auth, requireRole(['admin', 'manager']), async (req, res)
     };
 
     // If manager, show expenses where they are current approver or have pending approval
+    // Only show if the manager is active
     if (req.user.role === 'manager') {
-      query.$or = [
-        { currentApprover: req.user._id },
-        { 
-          'approvals': {
-            $elemMatch: {
-              'approver': req.user._id,
-              'status': 'pending'
+      const currentUser = await User.findById(req.user._id);
+      if (currentUser.isActive) {
+        query.$or = [
+          { currentApprover: req.user._id },
+          { 
+            'approvals': {
+              $elemMatch: {
+                'approver': req.user._id,
+                'status': 'pending'
+              }
             }
           }
-        }
-      ];
+        ];
+      } else {
+        // If manager is inactive, return empty results
+        query._id = { $in: [] };
+      }
     }
 
     const expenses = await Expense.find(query)
       .populate('employee', 'name email manager')
-      .populate('approvals.approver', 'name email')
+      .populate('approvals.approver', 'name email isActive')
       .sort({ createdAt: -1 });
 
     // Debug logging
@@ -227,13 +234,13 @@ router.post('/:id/submit', auth, requireRole(['employee']), async (req, res) => 
     
     // Get the employee's manager if manager approval is required
     if (approvalRule.isManagerApprover) {
-      const employee = await User.findById(req.user._id);
+      const employee = await User.findById(req.user._id).populate('manager');
       console.log('Employee:', employee.name, 'Manager:', employee.manager);
-      if (employee.manager) {
-        approvers.unshift(employee.manager);
-        console.log('Added manager to approvers:', employee.manager);
+      if (employee.manager && employee.manager.isActive) {
+        approvers.unshift(employee.manager._id);
+        console.log('Added active manager to approvers:', employee.manager._id);
       } else {
-        console.log('No manager assigned to employee');
+        console.log('No active manager assigned to employee');
       }
     }
     
@@ -255,7 +262,7 @@ router.post('/:id/submit', auth, requireRole(['employee']), async (req, res) => 
     
     const populatedExpense = await Expense.findById(expense._id)
       .populate('employee', 'name email')
-      .populate('approvals.approver', 'name email');
+      .populate('approvals.approver', 'name email isActive');
 
     res.json(populatedExpense);
   } catch (error) {
@@ -312,7 +319,11 @@ router.post('/:id/approve', auth, requireRole(['admin', 'manager']), async (req,
       return res.status(404).json({ message: 'Expense not found' });
     }
 
-    // Check if user is authorized to approve
+    // Check if user is authorized to approve and is active
+    if (!currentUser.isActive) {
+      return res.status(403).json({ message: 'Inactive users cannot approve expenses' });
+    }
+
     const userApproval = expense.approvals.find(
       approval => approval.approver.toString() === req.user._id.toString()
     );
@@ -451,7 +462,7 @@ router.post('/:id/approve', auth, requireRole(['admin', 'manager']), async (req,
     
     const populatedExpense = await Expense.findById(expense._id)
       .populate('employee', 'name email')
-      .populate('approvals.approver', 'name email');
+      .populate('approvals.approver', 'name email isActive');
 
     res.json(populatedExpense);
   } catch (error) {

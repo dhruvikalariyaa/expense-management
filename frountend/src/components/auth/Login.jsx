@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 
 const Login = () => {
@@ -21,6 +22,7 @@ const Login = () => {
       [e.target.name]: e.target.value
     });
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -125,11 +127,21 @@ const Login = () => {
           </div>
 
           <div className="text-center">
+            <Link
+              to="/forgot-password"
+              className="text-sm text-blue-600 hover:text-blue-500 font-medium"
+            >
+              Forgot password?
+            </Link>
+          </div>
+
+          <div className="text-center">
             <p className="text-sm text-gray-600">
               Demo credentials: admin@demo.com / admin123
             </p>
           </div>
         </form>
+
       </div>
     </div>
   );
