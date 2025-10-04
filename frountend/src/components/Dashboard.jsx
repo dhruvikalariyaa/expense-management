@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import ExpenseSummary from './expenses/ExpenseSummary';
 import { 
   Receipt, 
   CheckCircle, 
@@ -22,7 +23,10 @@ const Dashboard = () => {
     totalExpenses: 0,
     pendingApprovals: 0,
     approvedExpenses: 0,
-    totalAmount: 0
+    totalAmount: 0,
+    toSubmitAmount: 0,
+    waitingApprovalAmount: 0,
+    approvedAmount: 0
   });
   const [recentExpenses, setRecentExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,11 +48,27 @@ const Dashboard = () => {
           .filter(e => e.status === 'approved')
           .reduce((sum, e) => sum + e.convertedAmount, 0);
 
+        // Calculate amounts for different statuses
+        const toSubmitAmount = expenses
+          .filter(e => e.status === 'draft')
+          .reduce((sum, e) => sum + e.convertedAmount, 0);
+        
+        const waitingApprovalAmount = expenses
+          .filter(e => e.status === 'waiting_approval' || e.status === 'submitted')
+          .reduce((sum, e) => sum + e.convertedAmount, 0);
+        
+        const approvedAmount = expenses
+          .filter(e => e.status === 'approved')
+          .reduce((sum, e) => sum + e.convertedAmount, 0);
+
         setStats({
           totalExpenses,
           pendingApprovals: pendingApprovals.length,
           approvedExpenses,
-          totalAmount
+          totalAmount,
+          toSubmitAmount,
+          waitingApprovalAmount,
+          approvedAmount
         });
 
         setRecentExpenses(expenses.slice(0, 5));
@@ -104,6 +124,16 @@ const Dashboard = () => {
     }
   };
 
+  const handleUpload = () => {
+    // Navigate to expense creation with upload option
+    window.location.href = '/expenses/new?upload=true';
+  };
+
+  const handleNewExpense = () => {
+    // Navigate to expense creation
+    window.location.href = '/expenses/new';
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
@@ -129,20 +159,24 @@ const Dashboard = () => {
                 {getRoleBasedMessage()}
               </p>
             </div>
-            {user.role === 'employee' && (
-              <Link
-                to="/expenses/new"
-                className="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                New Expense
-              </Link>
-            )}
+            
           </div>
         </div>
       </div>
 
       <div className="px-6 py-8">
+        {/* Expense Summary - Only show for employees */}
+        {user.role === 'employee' && (
+          <ExpenseSummary
+            toSubmitAmount={stats.toSubmitAmount}
+            waitingApprovalAmount={stats.waitingApprovalAmount}
+            approvedAmount={stats.approvedAmount}
+            onUpload={handleUpload}
+            onNewExpense={handleNewExpense}
+            currency={user.company?.baseCurrency || 'USD'}
+          />
+        )}
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
