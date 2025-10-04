@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
@@ -14,7 +14,9 @@ import {
   X,
   Building,
   UserCheck,
-  AlertTriangle
+  AlertTriangle,
+  MoreVertical,
+  Loader2
 } from 'lucide-react';
 
 const UserManagement = () => {
@@ -25,6 +27,9 @@ const UserManagement = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const [sendingPassword, setSendingPassword] = useState(null);
+  const dropdownRef = useRef(null);
 
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm({
     defaultValues: {
@@ -39,6 +44,19 @@ const UserManagement = () => {
   useEffect(() => {
     fetchUsers();
     fetchManagers();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        closeDropdown();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const fetchUsers = async () => {
@@ -125,6 +143,7 @@ const UserManagement = () => {
   };
 
   const handleSendPassword = async (userId) => {
+    setSendingPassword(userId);
     try {
       const response = await axios.post(`/api/users/${userId}/send-password`);
       if (response.data.passwordSent) {
@@ -134,7 +153,18 @@ const UserManagement = () => {
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to send password');
+    } finally {
+      setSendingPassword(null);
+      closeDropdown();
     }
+  };
+
+  const toggleDropdown = (userId) => {
+    setOpenDropdown(openDropdown === userId ? null : userId);
+  };
+
+  const closeDropdown = () => {
+    setOpenDropdown(null);
   };
 
   const getRoleColor = (role) => {
@@ -163,9 +193,8 @@ const UserManagement = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-          <p className="text-gray-600">Manage users, roles, and permissions</p>
-        </div>
+          <h3 className="text-2xl font-bold text-gray-900">User Management</h3>
+          </div>
         <button
           onClick={() => setShowForm(true)}
           className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -417,7 +446,7 @@ const UserManagement = () => {
       )}
 
       {/* Users Table */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
+      <div className="bg-white shadow overflow-visible sm:rounded-md">
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-medium text-gray-900">All Users</h3>
         </div>
@@ -425,7 +454,7 @@ const UserManagement = () => {
         {users.filter(user => user.isActive !== false).length > 0 ? (
           <ul className="divide-y divide-gray-200">
             {users.filter(user => user.isActive !== false).map((user) => (
-              <li key={user._id} className="px-6 py-4">
+              <li key={user._id} className="px-6 py-4 relative">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="flex-shrink-0">
@@ -461,28 +490,55 @@ const UserManagement = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
+                  <div className="relative" ref={dropdownRef}>
                     <button
-                      onClick={() => handleSendPassword(user._id)}
-                      className="text-gray-400 hover:text-blue-600"
-                      title="Send password via email"
+                      onClick={() => toggleDropdown(user._id)}
+                      className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
+                      title="More actions"
                     >
-                      <Send className="h-4 w-4" />
+                      <MoreVertical className="h-4 w-4" />
+                    </button>
+                    
+                    {openDropdown === user._id && (
+                      <div className="absolute right-0 bottom-full mb-1 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200">
+                        <div className="py-1">
+                          <button
+                            onClick={() => {
+                              handleEdit(user);
+                              closeDropdown();
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <Edit className="h-4 w-4 mr-3" />
+                            Edit User
+                    </button>
+                          <button
+                            onClick={() => {
+                              handleSendPassword(user._id);
+                            }}
+                            disabled={sendingPassword === user._id}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {sendingPassword === user._id ? (
+                              <Loader2 className="h-4 w-4 mr-3 animate-spin" />
+                            ) : (
+                              <Send className="h-4 w-4 mr-3" />
+                            )}
+                            {sendingPassword === user._id ? 'Sending...' : 'Send Password'}
                     </button>
                     <button
-                      onClick={() => handleEdit(user)}
-                      className="text-gray-400 hover:text-gray-600"
-                      title="Edit user"
-                    >
-                      <Edit className="h-4 w-4" />
+                            onClick={() => {
+                              handleDelete(user);
+                              closeDropdown();
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4 mr-3" />
+                            Deactivate User
                     </button>
-                    <button
-                      onClick={() => handleDelete(user)}
-                      className="text-gray-400 hover:text-red-600"
-                      title="Deactivate user"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </li>
